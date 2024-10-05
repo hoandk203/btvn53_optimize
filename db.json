@@ -1,0 +1,51 @@
+{
+  "categories": [
+    {
+      "id": "fc095da2-d01c-473a-956c-b1cd6b160cf4",
+      "name": "quan ao nu",
+      "orderNum": "112"
+    },
+    {
+      "id": "b4a7df70-1b2e-451c-bd8c-f6523ddffc66",
+      "name": "hoa quả",
+      "orderNum": "12"
+    },
+    {
+      "id": "56e3b86f-7163-4617-ad41-2d619ce79ecd",
+      "name": "Crypto",
+      "orderNum": "2"
+    }
+  ],
+  "products": [
+    {
+      "id": "fe358f07-2a19-455f-a0c5-d1f2ae93aae7",
+      "name": "BTC",
+      "categoryId": "56e3b86f-7163-4617-ad41-2d619ce79ecd",
+      "orderNum": "1"
+    },
+    {
+      "id": "a60f86d5-0687-43e5-8418-5cf44ef91fa3",
+      "name": "Mận",
+      "categoryId": "b4a7df70-1b2e-451c-bd8c-f6523ddffc66",
+      "orderNum": "1"
+    },
+    {
+      "id": "845487b3-ad18-49ed-9045-3dc6f876282b",
+      "name": "Dừa",
+      "categoryId": "b4a7df70-1b2e-451c-bd8c-f6523ddffc66",
+      "orderNum": "2"
+    },
+    {
+      "id": "f23cac56-c471-4d5b-90f1-bc2cba418006",
+      "name": "Áo",
+      "categoryId": "fc095da2-d01c-473a-956c-b1cd6b160cf4",
+      "orderNum": "1"
+    },
+    {
+      "id": "04863d7c-0ae1-415a-87eb-69f912f718ac",
+      "name": "ETH",
+      "categoryId": "56e3b86f-7163-4617-ad41-2d619ce79ecd",
+      "orderNum": "12"
+    }
+  ]
+}
