@@ -49,15 +49,45 @@ const FCommonTable = ({ columns, rows, maxWidth, onUpdate, onDelete }) => {
                                                             onUpdate(row)
                                                         }
                                                         sx={{ color: "green" }}
-                                                        className={"ma-2 pointer"}
+                                                        className={
+                                                            "ma-2 pointer"
+                                                        }
                                                     />
                                                     <DeleteOutlineIcon
                                                         onClick={() =>
                                                             onDelete(row.id)
                                                         }
                                                         sx={{ color: "red" }}
-                                                        className={"ma-2 pointer"}
+                                                        className={
+                                                            "ma-2 pointer"
+                                                        }
                                                     />
+                                                </TableCell>
+                                            );
+                                        }
+                                        if (column.name === "img") {
+                                            return (
+                                                <TableCell
+                                                    key={`${ridx}${column.name}`}
+                                                >
+                                                    <div 
+                                                        style={{display: "flex", flexDirection: "row", wrap: "no-wrap"}}>
+                                                            {Array.isArray(row[column.name]) && row[column.name].map((img, index)=>{
+                                                                return (
+                                                                    
+                                                                        <img
+                                                                            key={index}
+                                                                            style={{
+                                                                                maxWidth: "80px",
+                                                                                maxHeight: "80px",
+                                                                                border: "1px solid black",
+                                                                                margin: "5px"
+                                                                            }}
+                                                                            src={img}
+                                                                        ></img>
+                                                                    )
+                                                                })}
+                                                    </div>
                                                 </TableCell>
                                             );
                                         }

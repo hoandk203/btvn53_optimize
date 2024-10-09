@@ -15,7 +15,7 @@ export default function ({onClose, reload, currCategory, setMsgSuccess }) {
         orderNum: "",
     });
     const [error, setError] = useState(null);
-
+    const [isLoading, setIsLoading] = useState(false);
     useEffect(() => {
         setError(null);
         if (currCategory.id) {
@@ -35,15 +35,15 @@ export default function ({onClose, reload, currCategory, setMsgSuccess }) {
     };
 
     const onSave = async () => {
-
-        if(validateInput(category, "category")) {
+        if (validateInput(category, "category")) {
             setError(validateInput(category, "category"));
             return;
         }
 
-        if (!currCategory.id) {
-            // create category
-            try {
+        setIsLoading(true);
+        try {
+            if (!currCategory.id) {
+                // create category
                 const response = await axios.post(
                     `${baseApi}/categories`,
                     category,
@@ -53,18 +53,13 @@ export default function ({onClose, reload, currCategory, setMsgSuccess }) {
                         },
                     }
                 );
-    
                 if (response.data) {
                     setMsgSuccess("Create category");
-                    await reload();
                     onClose();
+                    reload();
                 }
-            } catch (error) {
-                console.log(error);
-            }
-        } else {
-            // update category
-            try {
+            } else {
+                // update category
                 const response = await axios.put(
                     `${baseApi}/categories/${currCategory.id}`,
                     category,
@@ -76,19 +71,30 @@ export default function ({onClose, reload, currCategory, setMsgSuccess }) {
                 );
                 if (response.data) {
                     setMsgSuccess("Update category");
-                    await reload();
                     onClose();
+                    reload();
                 }
-            } catch (error) {
-                console.log(error);
             }
-            
+        } catch (error) {
+            console.log(error);
+            setError("Có lỗi xảy ra khi lưu danh mục");
+        } finally {
+            setIsLoading(false);
         }
     };
 
     return (
         <>
             <DialogContainer action={currCategory.id ? "Update" : "Create"} type="category" onClose={onClose} onSave={onSave}>
+                {isLoading && (
+                    <Alert
+                    variant="filled"
+                    severity="info"
+                    className="top-50px left-50 translate-minus-50 fixed"
+                >
+                        {"Loading..."}
+                    </Alert>
+                )}
                 {error && (
                     <Alert variant="filled" severity="error" className="top-50px left-50 translate-minus-50 fixed">
                         {error}

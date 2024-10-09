@@ -13,6 +13,7 @@ export default function () {
     const [categories, setCategories] = useState([]);
     const [currCategory, setCurrCategory] = useState({});
     const [msgSuccess, setMsgSuccess] = useState("");
+    const [isLoading, setIsLoading] = useState(false);
 
     const columns = [
         {
@@ -35,8 +36,15 @@ export default function () {
 
     const getCategories = async () => {
         // fetch categories from server
-        const response = await axios.get(`${baseApi}/categories`);
-        setCategories(response.data);
+        setIsLoading(true);
+        try {
+            const response = await axios.get(`${baseApi}/categories`);
+            setCategories(response.data);
+        } catch (error) {
+            console.log(error);
+        } finally {
+            setIsLoading(false);
+        }
     };
 
     useEffect(() => {
@@ -53,9 +61,16 @@ export default function () {
     };
 
     const onDelete = (id) => {
-        axios.delete(`${baseApi}/categories/${id}`);
-        setCategories(categories.filter((category) => category.id !== id));
-        setMsgSuccess("Delete category");
+        setIsLoading(true);
+        try {
+            axios.delete(`${baseApi}/categories/${id}`);
+            setCategories(categories.filter((category) => category.id !== id));
+            setMsgSuccess("Delete category");
+        } catch (error) {
+            console.log(error);
+        } finally {
+            setIsLoading(false);
+        }
     };
 
     const onCloseDialog = () => {
@@ -72,6 +87,15 @@ export default function () {
     return (
         <>
             <h1 className="text-center">Category</h1>
+            {isLoading && (
+                    <Alert
+                    variant="filled"
+                    severity="info"
+                    className="top-50px left-50 translate-minus-50 fixed"
+                >
+                        {"Loading Categories..."}
+                </Alert>
+            )}
             {msgSuccess==="Create category" && (
                 <Alert variant="filled" severity="success" className="top-50px left-50 translate-minus-50 fixed">
                     Thêm danh mục thành công
