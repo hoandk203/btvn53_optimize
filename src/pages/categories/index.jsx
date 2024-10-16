@@ -1,49 +1,47 @@
 import axios from "axios";
-import { FCommonTable } from "../../components";
-import { useState, useEffect } from "react";
+import { FCommonTable} from "../../components";
+import { useState, useEffect, useContext } from "react";
 import { CategoryDialog } from "../../components";
-import { Button, Alert } from "@mui/material";
+import { Button, Alert, Container } from "@mui/material";
 import HomeIcon from "@mui/icons-material/Home";
 import { useNavigate } from "react-router-dom";
-import { DialogContext } from "../../utils";
+import DialogContext from "../../store";
+
+const columns = [
+    {
+        text: "Id",
+        name: "id",
+    },
+    {
+        text: "Name",
+        name: "name",
+    },
+    {
+        text: "Order Number",
+        name: "orderNum",
+    },
+    {
+        text: "",
+        name: "action",
+    },
+];
+
 export default function () {
     const baseApi = import.meta.env.VITE_BASE_API;
     const navigate = useNavigate();
-    const [showDialog, setShowDialog] = useState(false);
-    const [categories, setCategories] = useState([]);
-    const [currCategory, setCurrCategory] = useState({});
-    const [msgSuccess, setMsgSuccess] = useState("");
-    const [isLoading, setIsLoading] = useState(false);
 
-    const columns = [
-        {
-            text: "Id",
-            name: "id",
-        },
-        {
-            text: "Name",
-            name: "name",
-        },
-        {
-            text: "Order Number",
-            name: "orderNum",
-        },
-        {
-            text: "",
-            name: "action",
-        },
-    ];
+    const {state, dispatch} = useContext(DialogContext)
 
     const getCategories = async () => {
-        // fetch categories from server
-        setIsLoading(true);
+        if (state.categories.length > 0) return;
+        dispatch({type: "isLoadingAPI/true"});
         try {
             const response = await axios.get(`${baseApi}/categories`);
-            setCategories(response.data);
+            dispatch({type: "categories/load", payload: response.data});
         } catch (error) {
             console.log(error);
         } finally {
-            setIsLoading(false);
+            dispatch({type: "isLoadingAPI/false"});
         }
     };
 
@@ -52,99 +50,98 @@ export default function () {
     }, []);
 
     const onUpdate = (category) => {
-        setShowDialog(true);
-        setCurrCategory(category);
+        dispatch({type: "dialog/true", payload: {category}})
+        dispatch({type: "currCategory/update", payload: category})
     };
 
     const onCreate = () => {
-        setShowDialog(true);
+        dispatch({type: "dialog/true"})
     };
 
     const onDelete = (id) => {
-        setIsLoading(true);
+        dispatch({type: "isLoading/true"})
         try {
             axios.delete(`${baseApi}/categories/${id}`);
-            setCategories(categories.filter((category) => category.id !== id));
-            setMsgSuccess("Delete category");
+            dispatch({type: "categories/load", payload: state.categories.filter((category) => category.id !== id)})
+            dispatch({type: "msgSuccess/update", payload: "Delete category"})
         } catch (error) {
             console.log(error);
         } finally {
-            setIsLoading(false);
+            dispatch({type: "isLoading/false"});
         }
     };
 
     const onCloseDialog = () => {
-        setShowDialog(false);
-        setCurrCategory({id: "", name: "", orderNum: "" });
+        dispatch({type: "dialog/false"})
+        dispatch({type: "currCategory/update", payload: {}})
     };
 
     useEffect(() => {
         setTimeout(() => {
-            setMsgSuccess("");
+            dispatch({type: "msgSuccess/update", payload: ""})
         }, 2500);
-    }, [msgSuccess]);
+    }, [state.msgSuccess]);
 
     return (
         <>
-            <h1 className="text-center">Category</h1>
-            {isLoading && (
-                    <Alert
-                    variant="filled"
-                    severity="info"
-                    className="top-50px left-50 translate-minus-50 fixed"
-                >
-                        {"Loading Categories..."}
-                </Alert>
-            )}
-            {msgSuccess==="Create category" && (
-                <Alert variant="filled" severity="success" className="top-50px left-50 translate-minus-50 fixed">
-                    Thêm danh mục thành công
-                </Alert>)
-            }
-            {msgSuccess==="Update category" && (
-                <Alert variant="filled" severity="success" className="top-50px left-50 translate-minus-50 fixed">
-                    Cập nhật danh mục thành công
-                </Alert>)
-            }
-            {msgSuccess==="Delete category" && (
-                <Alert variant="filled" severity="success" className="top-50px left-50 translate-minus-50 fixed">
-                    Xóa danh mục thành công
-                </Alert>)
-            }
-            <div style={{ maxWidth: "1000px", margin: "auto" }}>
-                <Button
-                    variant="outlined"
-                    startIcon={<HomeIcon />}
-                    onClick={() => {
-                        navigate("/");
-                    }}
-                >
-                    Home
-                </Button>
-                <Button
-                    variant="contained"
-                    color="success"
-                    className="float-right"
-                    onClick={onCreate}
-                >
-                    New Category
-                </Button>
-                <FCommonTable
-                    maxWidth={1000}
-                    columns={columns}
-                    rows={categories}
-                    onUpdate={onUpdate}
-                    onDelete={onDelete}
-                />
-                <DialogContext.Provider value={{showDialog:showDialog}}>
-                    <CategoryDialog
-                        onClose={onCloseDialog}
-                        width={500}
-                        reload={getCategories}
-                        currCategory={currCategory}
-                        setMsgSuccess={setMsgSuccess}
-                    />
-                </DialogContext.Provider>
+            <div className="flex-1 relative">
+                <Container maxWidth="md">
+                    <h1 className="text-center">Category</h1>
+                    {state.isLoadingAPI && (
+                            <Alert
+                            variant="filled"
+                            severity="info"
+                            className="top-50px left-50 translate-minus-50 absolute"
+                        >
+                                {"Loading Categories..."}
+                        </Alert>
+                    )}
+                    {state.msgSuccess==="Create category" && (
+                        <Alert variant="filled" severity="success" className="top-50px left-50 translate-minus-50 absolute">
+                            Thêm danh mục thành công
+                        </Alert>)
+                    }
+                    {state.msgSuccess==="Update category" && (
+                        <Alert variant="filled" severity="success" className="top-50px left-50 translate-minus-50 absolute">
+                            Cập nhật danh mục thành công
+                        </Alert>)
+                    }
+                    {state.msgSuccess==="Delete category" && (
+                        <Alert variant="filled" severity="success" className="top-50px left-50 translate-minus-50 absolute">
+                            Xóa danh mục thành công
+                        </Alert>)
+                    }
+                    <div style={{ maxWidth: "1000px", margin: "auto" }}>
+                        <Button
+                            variant="outlined"
+                            startIcon={<HomeIcon />}
+                            onClick={() => {
+                                navigate("/");
+                            }}
+                        >
+                            Home
+                        </Button>
+                        <Button
+                            variant="contained"
+                            color="success"
+                            className="float-right"
+                            onClick={onCreate}
+                        >
+                            New Category
+                        </Button>
+                        <FCommonTable
+                            maxWidth={1000}
+                            columns={columns}
+                            rows={state.categories}
+                            onUpdate={onUpdate}
+                            onDelete={onDelete}
+                        />
+                        <CategoryDialog
+                            onClose={onCloseDialog}
+                            width={500}
+                        />
+                    </div>
+                </Container>
             </div>
         </>
     );

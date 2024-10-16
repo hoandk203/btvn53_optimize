@@ -1,52 +1,51 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import {TextField} from "@mui/material";
 import Alert from "@mui/material/Alert";
 import "../../index.css";
 import { v4 } from "uuid";
 import DialogContainer from "../DialogContainer";
 import axios from "axios";
-import { validateInput } from "../../utils/Validate.jsx";
+import { validateInput } from "../../utils/Validate.js";
+import DialogContext from "../../store";
 
-export default function ({onClose, reload, currCategory, setMsgSuccess }) {
+export default function ({onClose}) {
     const baseApi = import.meta.env.VITE_BASE_API;
-    const [category, setCategory] = useState({
-        id: v4(),
-        name: "",
-        orderNum: "",
-    });
-    const [error, setError] = useState(null);
-    const [isLoading, setIsLoading] = useState(false);
+    
+    const {state, dispatch} = useContext(DialogContext)
+
     useEffect(() => {
-        setError(null);
-        if (currCategory.id) {
-            setCategory(currCategory);
+        dispatch({type: "error/update", payload: null});
+        if (state.currCategory.id) {
+            dispatch({type: "category/update", payload: state.currCategory})
         } else {
-            setCategory({
+            dispatch({type: "category/update", payload: {
                 id: v4(),
                 name: "",
                 orderNum: "",
-            });
+            }})
         }
-    }, [currCategory]);
+    }, [state.currCategory]);
 
     const onInput = (e) => {
-        setCategory({ ...category, [e.target.name]: e.target.value });
-        setError(null);
+        dispatch({type: "category/update", payload: {...state.category, [e.target.name]: e.target.value}})
+        dispatch({type: "error/update", payload: null});
     };
 
-    const onSave = async () => {
-        if (validateInput(category, "category")) {
-            setError(validateInput(category, "category"));
+    const onSave = async (e) => {
+        e.target.disabled= true;
+        if (validateInput(state.category, "category")) {
+            e.target.disabled= false;
+            dispatch({type: "error/update", payload: validateInput(state.category, "category")});
             return;
         }
 
-        setIsLoading(true);
+        dispatch({type: "isLoading/true", })
         try {
-            if (!currCategory.id) {
+            if (!state.currCategory.id) {
                 // create category
                 const response = await axios.post(
                     `${baseApi}/categories`,
-                    category,
+                    state.category,
                     {
                         headers: {
                             "Content-Type": "application/json",
@@ -54,15 +53,16 @@ export default function ({onClose, reload, currCategory, setMsgSuccess }) {
                     }
                 );
                 if (response.data) {
-                    setMsgSuccess("Create category");
+                    dispatch({type: "msgSuccess/update", payload: "Create category"})
+                    dispatch({type: "categories/create", payload: response.data})
+                    e.target.disabled= false;
                     onClose();
-                    reload();
                 }
             } else {
                 // update category
                 const response = await axios.put(
-                    `${baseApi}/categories/${currCategory.id}`,
-                    category,
+                    `${baseApi}/categories/${state.currCategory.id}`,
+                    state.category,
                     {
                         headers: {
                             "Content-Type": "application/json",
@@ -70,23 +70,26 @@ export default function ({onClose, reload, currCategory, setMsgSuccess }) {
                     }
                 );
                 if (response.data) {
-                    setMsgSuccess("Update category");
+                    dispatch({type: "msgSuccess/update", payload: "Update category"})
+                    dispatch({type: "categories/update", payload: {
+                        categories: state.categories.filter((category)=>category.id !== state.currCategory.id),
+                        category: response.data
+                    }})
+                    e.target.disabled= false;
                     onClose();
-                    reload();
                 }
             }
         } catch (error) {
-            console.log(error);
-            setError("Có lỗi xảy ra khi lưu danh mục");
+            dispatch({type: "error/update", payload: "Có lỗi xảy ra khi lưu danh mục"})
         } finally {
-            setIsLoading(false);
+            dispatch({type: "isLoading/false"})
         }
     };
 
     return (
         <>
-            <DialogContainer action={currCategory.id ? "Update" : "Create"} type="category" onClose={onClose} onSave={onSave}>
-                {isLoading && (
+            <DialogContainer action={state.currCategory.id ? "Update" : "Create"} type="category" onClose={onClose} onSave={onSave}>
+                {state.isLoading && (
                     <Alert
                     variant="filled"
                     severity="info"
@@ -95,9 +98,9 @@ export default function ({onClose, reload, currCategory, setMsgSuccess }) {
                         {"Loading..."}
                     </Alert>
                 )}
-                {error && (
+                {state.error && (
                     <Alert variant="filled" severity="error" className="top-50px left-50 translate-minus-50 fixed">
-                        {error}
+                        {state.error}
                     </Alert>
                 )}
                 <TextField
@@ -109,7 +112,7 @@ export default function ({onClose, reload, currCategory, setMsgSuccess }) {
                     fullWidth
                     variant="standard"
                     onInput={onInput}
-                    value={category.name}
+                    value={state.category.name}
                 />
                 <TextField
                     required
@@ -120,7 +123,7 @@ export default function ({onClose, reload, currCategory, setMsgSuccess }) {
                     fullWidth
                     variant="standard"
                     onInput={onInput}
-                    value={category.orderNum}
+                    value={state.category.orderNum}
                 />
             </DialogContainer>
         </>

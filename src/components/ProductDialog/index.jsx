@@ -1,18 +1,14 @@
-import React, { useState, useEffect } from "react";
-import { TextField, Button } from "@mui/material";
-import Select from "@mui/material/Select";
-import MenuItem from "@mui/material/MenuItem";
-import FormControl from "@mui/material/FormControl";
-import InputLabel from "@mui/material/InputLabel";
-import Alert from "@mui/material/Alert";
+import React, { useState, useEffect, useContext } from "react";
+import { TextField, Button, Select, MenuItem, FormControl, InputLabel, Alert } from "@mui/material";
 import "../../index.css";
 import { v4 } from "uuid";
 import DialogContainer from "../DialogContainer";
 import axios from "axios";
-import { validateInput } from "../../utils/Validate.jsx";
+import { validateInput } from "../../utils/Validate.js";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import { styled } from "@mui/material/styles";
 import { readFile } from "../../utils/index.js";
+import DialogContext from "../../store";
 
 const VisuallyHiddenInput = styled("input")({
     clip: "rect(0 0 0 0)",
@@ -26,89 +22,79 @@ const VisuallyHiddenInput = styled("input")({
     width: 1,
 });
 
-export default function ({
-    onClose,
-    currProduct,
-    reload,
-    categories = [],
-    setMsgSuccess,
-}) {
+export default function ({ onClose }) {
     const baseApi = import.meta.env.VITE_BASE_API;
-    const [product, setProduct] = useState(currProduct);
-    const [error, setError] = useState(null);
-    const [img, setImg] = useState(null);
-    const [isLoading, setIsLoading] = useState(false);
+
+    const {state, dispatch} = useContext(DialogContext)
+
     useEffect(() => {
-        setError(null);
-        if (currProduct.id) {
-            setProduct(currProduct);
+        dispatch({type: "error/update", payload: null});
+        if (state.currProduct.id) {
+            dispatch({type: "product/update", payload: state.currProduct})
         } else {
-            setProduct({
+            dispatch({type: "product/update", payload: {
                 id: v4(),
                 name: "",
                 categoryId: "",
                 orderNum: "",
                 img: [],
-            });
+            }})
         }
-    }, [currProduct]);
+    }, [state.currProduct]);
 
     const onInput = (e) => {
-        setProduct({ ...product, [e.target.name]: e.target.value });
-        setError(null);
+        dispatch({type: "product/update", payload: {...state.product, [e.target.name]: e.target.value}})
+        dispatch({type: "error/update", payload: null});
     };
 
     const onChangeCategory = (e) => {
-        setProduct({ ...product, categoryId: e.target.value });
-        setError(null);
+        dispatch({type: "product/update", payload: {...state.product, categoryId: e.target.value}})
+        dispatch({type: "error/update", payload: null});
     };
 
-    const onSave = async () => {
-        if (validateInput(product, "product")) {
-            setError(validateInput(product, "product"));
+    const onSave = async (e) => {
+        e.target.disabled= true;
+        if (validateInput(state.product, "product")) {
+            e.target.disabled= false;
+            dispatch({type: "error/update", payload: validateInput(state.product, "product")});
             return;
         }
 
-        setIsLoading(true);
+        dispatch({type: "isLoading/true"});
         try {
-            if (!currProduct.id) {
+            if (!state.currProduct.id) {
                 // create product
-                const response = await axios.post(
-                    `${baseApi}/products`,
-                    product,
-                    {
-                        headers: {
-                            "Content-Type": "application/json",
-                        },
-                    }
-                );
+                const response = await axios.post(`${baseApi}/products`, state.product, {
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                });
                 if (response.data) {
-                    setMsgSuccess("Create product");
+                    dispatch({type: "msgSuccess/update", payload: "Create product"})
                     onClose();
-                    reload();
+                    dispatch({type: "products/create", payload: response.data})
                 }
             } else {
                 // update product
-                const response = await axios.put(
-                    `${baseApi}/products/${currProduct.id}`,
-                    product,
-                    {
-                        headers: {
-                            "Content-Type": "application/json",
-                        },
-                    }
-                );
+                const response = await axios.put(`${baseApi}/products/${state.currProduct.id}`, state.product, {
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                });
                 if (response.data) {
-                    setMsgSuccess("Update product");
+                    dispatch({type: "msgSuccess/update", payload: "Update product"})
                     onClose();
-                    reload();
+                    dispatch({type: "products/update", payload: {
+                        products: state.products.filter((product)=>product.id !== state.currProduct.id),
+                        product: response.data
+                    }})
                 }
             }
         } catch (error) {
             console.log(error);
-            setError("Có lỗi xảy ra khi lưu sản phẩm");
+            dispatch({type: "error/update", payload: "Có lỗi xảy ra khi lưu sản phẩm"});
         } finally {
-            setIsLoading(false);
+            dispatch({type: "isLoading/false"});
         }
     };
 
@@ -116,36 +102,37 @@ export default function ({
         const fileListData = [];
         const fileList = event.target.files;
         const fileLimit = 4;
-    
-        for (let i = 0; i < fileLimit; i++) {
-            if (fileList[i]) {
-                fileListData.push(await readFile(fileList[i]));
-            }
-        }
-    
+
         if (fileList.length > fileLimit) {
             alert(`Chỉ có thể tải lên tối đa ${fileLimit} ảnh. ${fileList.length - fileLimit} ảnh cuối cùng sẽ bị bỏ qua.`);
+        } else {
+            for (let i = 0; i < fileList.length; i++) {
+
+                if (fileList[i]) {
+                    if (fileList[i].type.includes("image/jpg") || fileList[i].type.includes("image/png") || fileList[i].type.includes("image/jpeg")) {
+                        fileListData.push(await readFile(fileList[i]));
+                    } else {
+                        alert("Ảnh phải có định dạng PNG, JPG, JPEG");
+                    }
+                }
+            }
         }
-    
-        setProduct({ ...product, img: fileListData });
+
+        dispatch({type: "product/update", payload: {...state.product, img: fileListData}})
     };
     return (
         <>
-            <DialogContainer
-                action={currProduct.id ? "Update" : "Create"}
-                type="product"
-                onClose={onClose}
-                onSave={onSave}
-            >
-                {isLoading && (
-                    <Alert
-                    variant="filled"
-                    severity="info"
-                    className="top-50px left-50 translate-minus-50 fixed"
-                >
+            <DialogContainer action={state.currProduct && state.currProduct.id ? "Update" : "Create"} type="product" onClose={onClose} onSave={onSave}>
+                {state.isLoading && (
+                    <Alert variant="filled" severity="info" className="top-50px left-50 translate-minus-50 fixed">
                         {"Loading..."}
                     </Alert>
                 )}
+                {state.error && (
+                        <Alert variant="filled" severity="error" className="top-50px left-50 translate-minus-50 fixed">
+                            {state.error}
+                        </Alert>
+                    )}
                 <TextField
                     required
                     margin="dense"
@@ -155,29 +142,18 @@ export default function ({
                     fullWidth
                     variant="standard"
                     onInput={onInput}
-                    value={product.name}
+                    value={state.product.name}
                 />
                 <FormControl variant="standard" fullWidth>
-                    {error && (
-                        <Alert
-                            variant="filled"
-                            severity="error"
-                            className="top-50px left-50 translate-minus-50 fixed"
-                        >
-                            {error}
-                        </Alert>
-                    )}
-                    <InputLabel id="demo-simple-select-standard-label">
-                        Category
-                    </InputLabel>
+                    <InputLabel id="demo-simple-select-standard-label">Category</InputLabel>
                     <Select
                         labelId="demo-simple-select-standard-label"
                         id="demo-simple-select-standard"
-                        value={product.categoryId}
+                        value={state.product.categoryId}
                         onChange={onChangeCategory}
                         label="Category"
                     >
-                        {categories.map((category) => {
+                        {state.categories.map((category) => {
                             return (
                                 <MenuItem key={category.id} value={category.id}>
                                     {category.name}
@@ -195,22 +171,33 @@ export default function ({
                     fullWidth
                     variant="standard"
                     onInput={onInput}
-                    value={product.orderNum}
+                    value={state.product.orderNum}
                 />
-                <Button
-                    component="label"
-                    role={undefined}
-                    variant="contained"
-                    tabIndex={-1}
-                    startIcon={<CloudUploadIcon />}
-                >
+
+                <Button component="label" role={undefined} variant="contained" tabIndex={-1} startIcon={<CloudUploadIcon />}>
                     Upload files
-                    <VisuallyHiddenInput
-                        type="file"
-                        onChange={(event) => onUploadFile(event)}
-                        multiple
-                    />
+                    <VisuallyHiddenInput type="file" onChange={(event) => onUploadFile(event)} multiple />
                 </Button>
+                <div style={{ display: "flex" }}>
+                    {Array.isArray(state.product.img) &&
+                        state.product.img.length > 0 &&
+                        state.product.img.map((img, idx) => (
+                            <div
+                                key={idx}
+                                style={{
+                                    width: "80px",
+                                    height: "80px",
+                                    border: "1px solid black",
+                                    margin: "5px",
+                                    display: "flex",
+                                    justifyContent: "center",
+                                    flexDirection: "column",
+                                }}
+                            >
+                                <img src={img} style={{ width: "100%" }} />
+                            </div>
+                        ))}
+                </div>
             </DialogContainer>
         </>
     );

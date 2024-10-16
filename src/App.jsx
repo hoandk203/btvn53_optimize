@@ -6,7 +6,7 @@ import viteLogo from '/vite.svg'
 function App() {
   return (
     <>
-      <span>App</span>
+    
     </>
   )
 }

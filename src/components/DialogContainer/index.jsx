@@ -1,4 +1,4 @@
-import React from "react";
+import React, {useContext} from "react";
 import {
     DialogTitle,
     Dialog,
@@ -6,16 +6,15 @@ import {
     DialogActions,
     Button,
 } from "@mui/material";
-import {useContext} from "react";
-import {DialogContext} from "../../utils";
+import DialogContext from "../../store";
 
 export default function ({children, onClose, onSave, width, action, type }) {
-    const {showDialog} = useContext(DialogContext);
+    const {state} = useContext(DialogContext);
 
     return (
         <>
             <Dialog
-                open={showDialog}
+                open={state.showDialog}
                 onClose={onClose}
                 aria-labelledby="alert-dialog-title"
                 aria-describedby="alert-dialog-description"
