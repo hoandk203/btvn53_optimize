@@ -4,7 +4,7 @@ import "../../index.css";
 import { v4 } from "uuid";
 import DialogContainer from "../DialogContainer/DialogContainer.jsx";
 import axios from "axios";
-import { validateInput } from "../../utils/validate.js";
+import { validateInput } from "../../utils/Validate.js";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import { styled } from "@mui/material/styles";
 import { readFile } from "../../utils/readFile.js";
