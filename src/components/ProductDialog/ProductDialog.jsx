@@ -1,13 +1,13 @@
-import React, { useState, useEffect, useContext } from "react";
+import React, { useEffect, useContext, memo } from "react";
 import { TextField, Button, Select, MenuItem, FormControl, InputLabel, Alert } from "@mui/material";
 import "../../index.css";
 import { v4 } from "uuid";
-import DialogContainer from "../DialogContainer";
+import DialogContainer from "../DialogContainer/DialogContainer.jsx";
 import axios from "axios";
-import { validateInput } from "../../utils/Validate.js";
+import { validateInput } from "../../utils/validate.js";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import { styled } from "@mui/material/styles";
-import { readFile } from "../../utils/index.js";
+import { readFile } from "../../utils/readFile.js";
 import DialogContext from "../../store";
 
 const VisuallyHiddenInput = styled("input")({
@@ -22,7 +22,8 @@ const VisuallyHiddenInput = styled("input")({
     width: 1,
 });
 
-export default function ({ onClose }) {
+const ProductDialog = memo(function ProductDialog({ onClose }) {
+    
     const baseApi = import.meta.env.VITE_BASE_API;
 
     const {state, dispatch} = useContext(DialogContext)
@@ -201,4 +202,6 @@ export default function ({ onClose }) {
             </DialogContainer>
         </>
     );
-}
+})
+
+export default ProductDialog;

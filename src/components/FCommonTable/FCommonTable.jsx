@@ -1,11 +1,11 @@
-import React from "react";
+import React, { memo } from "react";
 import { TableContainer, Table, Paper, TableHead, TableRow, TableCell, TableBody } from "@mui/material";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
 import "../../index.css";
 import style from "./style.module.css";
 
-const FCommonTable = ({ columns, rows, maxWidth, onUpdate, onDelete }) => {
+const FCommonTable = memo(function FCommonTable({ columns, rows, maxWidth, onUpdate, onDelete }) {
     return (
         <>
             <TableContainer sx={{ maxWidth: maxWidth, margin: "0 auto" }} component={Paper}>
@@ -80,6 +80,6 @@ const FCommonTable = ({ columns, rows, maxWidth, onUpdate, onDelete }) => {
             </TableContainer>
         </>
     );
-};
+});
 
 export default FCommonTable;

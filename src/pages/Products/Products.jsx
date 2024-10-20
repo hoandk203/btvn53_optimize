@@ -1,12 +1,11 @@
 import axios from "axios";
 import { FCommonTable } from "../../components";
-import { useState, useEffect, useContext } from "react";
+import { useEffect, useContext, useCallback } from "react";
 import { ProductDialog } from "../../components";
 import { Button, Alert, Container } from "@mui/material";
 import HomeIcon from "@mui/icons-material/Home";
 import { useNavigate } from "react-router-dom";
 import DialogContext from "../../store";
-
 const columns = [
     {
         text: "Id",
@@ -34,14 +33,19 @@ const columns = [
     },
 ];
 
+let isLoadingAPI = false;
+let isLoading = false;
+
 export default function () {
+    
     const baseApi = import.meta.env.VITE_BASE_API;
     const navigate = useNavigate();
     const {state, dispatch} = useContext(DialogContext)
     
     const getCategories = async () => {
+        
         if (state.categories.length > 0) return;
-        dispatch({type: "isLoadingAPI/true"})
+        isLoadingAPI = true;
         try {
             const response = await axios.get(`${baseApi}/categories`);
             if (response.data) {
@@ -50,20 +54,21 @@ export default function () {
         } catch (error) {
             console.log(error);
         } finally {
-            dispatch({type: "isLoadingAPI/false"})
+            isLoadingAPI = false;
         }
     };
 
     const getProducts = async () => {
+        
         if (state.products.length > 0) return;
-        dispatch({type: "isLoadingAPI/true"})
+        isLoadingAPI = true;
         try {
             const response = await axios.get(`${baseApi}/products`);
             dispatch({type: "products/load", payload: response.data})
         } catch (error) {
             console.log(error);
         } finally {
-            dispatch({type: "isLoadingAPI/false"})
+            isLoadingAPI = false;
         }
     };
 
@@ -72,21 +77,21 @@ export default function () {
         getProducts();
     }, []);
 
-    const onUpdate = (product) => {
+    const onUpdate = useCallback((product) => {
         dispatch({type: "dialog/true", payload: {product}})
         dispatch({type: "currProduct/update", payload: product})
-    };
+    }, []);
 
     const onCreate = () => {
         dispatch({type: "dialog/true"})
     };
 
-    const onCloseDialog = () => {
+    const onCloseDialog = useCallback(() => {
         dispatch({type: "dialog/false"})
         dispatch({type: "currProduct/update", payload: {}})
-    };
+    }, [dispatch]);
 
-    const onDelete = (id) => {
+    const onDelete = useCallback((id) => {
         dispatch({type: "isLoading/true"})
         try {
             axios.delete(`${baseApi}/products/${id}`);
@@ -99,7 +104,7 @@ export default function () {
         } finally {
             dispatch({type: "isLoading/false"})
         }
-    };
+    }, []);
 
     useEffect(() => {
         setTimeout(() => {
@@ -112,7 +117,7 @@ export default function () {
                 <div className="flex-1 relative">
                     <Container maxWidth="md">
                         <h1 className="text-center">Products</h1>
-                        {state.isLoadingAPI && (
+                        {isLoadingAPI && (
                             <Alert
                             variant="filled"
                             severity="info"

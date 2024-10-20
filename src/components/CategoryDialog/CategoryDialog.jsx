@@ -3,9 +3,9 @@ import {TextField} from "@mui/material";
 import Alert from "@mui/material/Alert";
 import "../../index.css";
 import { v4 } from "uuid";
-import DialogContainer from "../DialogContainer";
+import DialogContainer from "../DialogContainer/DialogContainer.jsx";
 import axios from "axios";
-import { validateInput } from "../../utils/Validate.js";
+import { validateInput } from "../../utils/validate.js";
 import DialogContext from "../../store";
 
 export default function ({onClose}) {

@@ -1,5 +1,3 @@
-export * from "./router.jsx";
-
 export const readFile = (file) => {
     return new Promise((resolve, reject) => {
         const reader = new FileReader();

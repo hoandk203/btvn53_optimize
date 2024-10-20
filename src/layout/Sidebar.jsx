@@ -1,7 +1,8 @@
-import React from 'react'
+import React, { memo } from 'react'
 import { useNavigate } from 'react-router-dom';
-import { Drawer, Box, List, Button } from '@mui/material';
-export default function () {
+import { Button } from '@mui/material';
+const Sidebar = memo(() => {
+  
     const navigate = useNavigate()
   return (
     <div style={{padding: "20px", width: '250px', display: 'flex', flexDirection: 'column', gap: '10px', alignItems: "flex-start", position: "sticky", top: "0", bottom:"0", backgroundColor: "#16161e", height: "100vh"}}>
@@ -11,4 +12,6 @@ export default function () {
         <Button onClick={() => navigate('/categories')}>Categories</Button>
     </div>
   )
-}
+})
+
+export default Sidebar;

@@ -1,6 +1,5 @@
-import { createContext } from 'react';
+import { createContext } from "react";
 
-const DialogContext= createContext(null)
+const ProviderContext = createContext(null);
 
-export default DialogContext;
-export {default as reducer} from './reducer'
+export default ProviderContext;

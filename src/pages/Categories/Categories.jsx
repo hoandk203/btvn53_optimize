@@ -1,6 +1,6 @@
 import axios from "axios";
 import { FCommonTable} from "../../components";
-import { useState, useEffect, useContext } from "react";
+import { useEffect, useContext, useCallback } from "react";
 import { CategoryDialog } from "../../components";
 import { Button, Alert, Container } from "@mui/material";
 import HomeIcon from "@mui/icons-material/Home";
@@ -26,7 +26,10 @@ const columns = [
     },
 ];
 
+let isLoadingAPI = false;
+
 export default function () {
+    
     const baseApi = import.meta.env.VITE_BASE_API;
     const navigate = useNavigate();
 
@@ -34,14 +37,14 @@ export default function () {
 
     const getCategories = async () => {
         if (state.categories.length > 0) return;
-        dispatch({type: "isLoadingAPI/true"});
+        isLoadingAPI = true;
         try {
             const response = await axios.get(`${baseApi}/categories`);
             dispatch({type: "categories/load", payload: response.data});
         } catch (error) {
             console.log(error);
         } finally {
-            dispatch({type: "isLoadingAPI/false"});
+            isLoadingAPI = false;
         }
     };
 
@@ -49,16 +52,16 @@ export default function () {
         getCategories();
     }, []);
 
-    const onUpdate = (category) => {
+    const onUpdate = useCallback((category) => {
         dispatch({type: "dialog/true", payload: {category}})
         dispatch({type: "currCategory/update", payload: category})
-    };
+    }, []);
 
     const onCreate = () => {
         dispatch({type: "dialog/true"})
     };
 
-    const onDelete = (id) => {
+    const onDelete = useCallback((id) => {
         dispatch({type: "isLoading/true"})
         try {
             axios.delete(`${baseApi}/categories/${id}`);
@@ -69,7 +72,7 @@ export default function () {
         } finally {
             dispatch({type: "isLoading/false"});
         }
-    };
+    }, []);
 
     const onCloseDialog = () => {
         dispatch({type: "dialog/false"})
@@ -87,7 +90,7 @@ export default function () {
             <div className="flex-1 relative">
                 <Container maxWidth="md">
                     <h1 className="text-center">Category</h1>
-                    {state.isLoadingAPI && (
+                    {isLoadingAPI && (
                             <Alert
                             variant="filled"
                             severity="info"

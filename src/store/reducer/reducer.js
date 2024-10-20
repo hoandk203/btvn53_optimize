@@ -8,8 +8,44 @@ import currCategoryReducer from "./currCategoryReducer";
 import productReducer from "./productReducer";
 import categoryReducer from "./categoryReducer";
 import errorReducer from "./errorReducer";
-import loadingAPIReducer from "./loadingAPIReducer";
-const reducer = (state, action) => {
+import { v4 } from "uuid";
+
+export const initialState = {
+    products: [],
+    categories: [],
+    product: {
+        id: v4(),
+        name: "",
+        categoryId: "",
+        orderNum: "",
+        img: [],
+    },
+    category: {
+        id: v4(),
+        name: "",
+        orderNum: "",
+    },
+    currProduct: {
+        id: "",
+        name: "",
+        categoryId: "",
+        orderNum: "",
+        img: [],
+    },
+    currCategory: {
+        id: "",
+        name: "",
+        categoryId: "",
+        orderNum: "",
+        img: [],
+    },
+    isLoading: false,
+    showDialog: false,
+    msgSuccess: "",
+    error: "",
+};
+
+export const reducer = (state, action) => {
     return {
         products: productsReducer(state.products, action),
         categories: categoriesReducer(state.categories, action),
@@ -17,12 +53,9 @@ const reducer = (state, action) => {
         category: categoryReducer(state.category, action),
         showDialog: dialogReducer(state.showDialog, action),
         isLoading: loadingReducer(state.isLoading, action),
-        isLoadingAPI: loadingAPIReducer(state.isLoadingAPI, action),
         msgSuccess: msgSuccessReducer(state.msgSuccess, action),
         error: errorReducer(state.error, action),
         currProduct: currProductReducer(state.currProduct, action),
         currCategory: currCategoryReducer(state.currCategory, action),
     };
 };
-
-export default reducer;
