@@ -43,5 +43,5 @@ export const validateInput = (input, type) => {
             return "Order Number không được bắt đầu bằng 0";
         }
     }
-    return null;
+    return "";
 };
